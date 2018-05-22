@@ -1,0 +1,20 @@
+{
+  "name": "plop-pack-json-modify",
+  "version": "1.0.0",
+  "description": "A plop package to insert data into JSON arrays or objects",
+  "main": "index.js",
+  "scripts": {
+    "test": "node testhelpers.js"
+  },
+  "keywords": [
+    "plop",
+    "generator",
+    "JSON"
+  ],
+  "author": "itzco",
+  "license": "ISC",
+  "dependencies": {
+    "colors": "^1.3.0",
+    "fs-extra": "^6.0.1"
+  }
+}

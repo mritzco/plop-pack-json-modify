@@ -1,6 +1,6 @@
 {
   "name": "plop-pack-json-modify",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A plop package to insert data into JSON arrays or objects",
   "main": "index.js",
   "scripts": {

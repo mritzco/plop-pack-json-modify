@@ -1,27 +1,50 @@
 # plop-pack-json-modify
 
-### What's plop?
-A really cool micro-generator framework to generate code or other files.
+Modify JSON files with a custom plop action type.
 
-You can think of it as a super light alternative to Yeoman.
-
-### What's this package?
-This package is a plugin for plop, it modifies JSON files.
-It can insert data in arrays or in objects.
-
-Case example:
-- Generate some js modules (using standard plop functionality)
-- Add the new module to a config.json file
+## Installation
+```
+npm install --save plop-pack-json-modify
+```
 
 #### Generators included
 - **appendJSON**. Modifies a JSON
 - **appendJSONFile**. Opens, modifies and store a JSON file
 
 
-### How to use
-- For instructions on how to use npm packages, check plop site (link at the end)
-- Sample for this package:
+## Usage
+In your base plopfile, use plop.load
+```
+const aGenerator = require("./path/to/a/generator");
 
+module.exports = function(plop) {
+    plop.load("plop-pack-json-modify");
+
+    plop.setGenerator("Generator Name", aGenerator);
+};
+```
+
+
+
+### How to use
+
+Valid configuration options:
+
+```.js
+// plopfile.js
+{
+    type: 'appendJSONFile',       /* appendJSON || appendJSONFile */
+    JSONFile: "filename.json",    /* For appendJSONFile  */
+    JSONKey: "routes",            /* JSON key to modify: routes: {} || [] */
+    JSONEntryKey: "{{name}}_key"  /* For objects, key to insert */
+    JSONEntryValue: {             /* Any valid JSON content */
+        "mountpath": "/{{name}}",
+        "module": "{{name}}/{{name}}_router"
+    }
+}
+```
+
+#### Example:
 ```js
 // filename.json  
 {
@@ -31,23 +54,10 @@ Case example:
 }
 ```
 
-```.js
-// plopfile.js
-// Only relevant configuration
-{
-    type: 'appendJSONFile',     /* appendJSON || appendJSONFile */
-    JSONFile: "filename.json",  /* For appendJSONFile  */
-    JSONKey: "routes",          /* Key to modify: routers: {} || [] */
-    JSONEntryKey: "{{name}}_key"/* For objects, key to insert */
-    JSONEntryValue: {
-        "mountpath": "/{{name}}",
-        "module": "{{name}}/{{name}}_router"
-    }
-}
-```
-Example:
+Plop variables:
 
     name=page
+
 
 ```js
 //result.js

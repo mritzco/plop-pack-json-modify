@@ -6,11 +6,12 @@
   "scripts": {
     "test": "node testhelpers.js"
   },
-  "keywords": [
-    "plop",
-    "generator",
-    "JSON"
-  ],
+  "keywords": ["plop", "generator", "JSON"],
+  "homepage": "https://github.com/mritzco/plop-pack-json-modify",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mritzco/plop-pack-json-modify"
+  },
   "author": "itzco",
   "license": "ISC",
   "dependencies": {

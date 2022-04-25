@@ -13,6 +13,7 @@
     "eslint": "^8.14.0"
   },
   "dependencies": {
-    "plop": "^3.0.5"
+    "plop": "^3.0.5",
+    "plop-pack-json-modify": "^1.1.0"
   }
 }

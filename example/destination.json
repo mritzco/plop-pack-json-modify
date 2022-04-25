@@ -1,0 +1,30 @@
+{
+  "routesObj": {
+    "Page": {
+      "mountpath": "/page",
+      "module": "page/page_router"
+    },
+    "Another": {
+      "mountpath": "/another",
+      "module": "another/another_router"
+    },
+    "OneMore": {
+      "mountpath": "/one-more",
+      "module": "one-more/one-more_router"
+    }
+  },
+  "modulesArray": [
+    {
+      "mountpath": "/page",
+      "module": "page/page_router"
+    },
+    {
+      "mountpath": "/another",
+      "module": "another/another_router"
+    },
+    {
+      "mountpath": "/one-more",
+      "module": "one-more/one-more_router"
+    }
+  ]
+}

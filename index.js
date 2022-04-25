@@ -1,43 +1,67 @@
-const fs = require('fs-extra');
+const fs = require('fs');
+const json3 = require('json3');
+const debug = require('debug')('json-modify-file');
+
+/**
+ * Load and parse content or return empty object
+ */
+function readJSON(filename) {
+    try {
+        const content = fs.readFileSync(filename, "utf-8");
+        const json = json3.parse(content)
+        return json;
+    } catch (error) {
+        console.error('[Error loading JSON]', error);
+        return {};
+    }
+}
+/**
+ * Replaces handlevars per property
+ */
+function replaceObj(value, vars, plop) {
+    let obj = value;
+    Object.keys(obj).forEach(function (item) {
+        obj[item] = plop.renderString(obj[item], vars);
+    });
+    return obj;
+}
+/**
+ * Replaces text or pass to object replacement
+ */
+function replace(value, vars, plop) {
+    return (typeof value === "object") ? replaceObj(value, vars, plop) : plop.renderString(value, vars);
+}
 
 module.exports = function (plop, cfg) {
 
-	// setup config defaults
-	let config = Object.assign({
-		prefix: 'json',
-	}, cfg || {});
+    // setup config defaults
+    let config = Object.assign({
+        prefix: 'json',
+        force: false
+    }, cfg || {});
 
-  plop.setDefaultInclude({ helpers: true });
-
-	plop.addHelper(`${config.prefix}-modify`, appendJSON);
-	plop.addHelper(`${config.prefix}-modify-file`, appendtoJSONFile);
-	// Just for testing. Config is per module / object
-	// plop.addHelper('setconfig', function (_config){ config = _config });
-  /**
-   * Inserts entries into JSON arrays or objects in a file
-   *
-   * To use with objects be sure to pass the property JSONEntryKey,
-   * otherwise the value is inserted as arrays
-   * @method
-   * @param  {string}   file  filename with the JSONKey
-   * @param  {string}   key   JSON attribute (the array or object) to append to
-   * @param  {string || object}   value The string or object to appendJSON
-   * @param  {object}   vars  User input on prompts passed by plop
-   * @param  {Function} cb    callback, after file has been saveSidebarRef
-   * @return {callback(err)}   Async callback with err or null if success.
-   */
-	function appendtoJSONFile(vars, cb) {
-		fs.readJSON(config.JSONFile, {}, (err, file_json) => {
-			let json = appendJSON(file_json, vars)
-
-			fs.writeJSON(config.JSONFile, json, {spaces: 2}, err => {
-					cb(err);
-			});
-		});
-	}
+    plop.setDefaultInclude({ actionTypes: true });
+    plop.setActionType(`${config.prefix}-modify-file`, appendtoJSONFile);
 
 
-	/**
+    function appendtoJSONFile(vars, config, plop) {
+        return new Promise((resolve, reject) => {
+            try {
+                const file_json = readJSON(config.JSONFile);
+                let json = appendJSON(file_json, vars, config, plop)
+                fs.writeFileSync(config.JSONFile,
+                    JSON.stringify(json, null, 2))
+                resolve('Success');
+
+            } catch (error) {
+                reject(error);
+            }
+        });
+
+    }
+
+
+    /**
    * Inserts entries into JSON arrays or objects
    * * Split for easier testing
    *
@@ -49,47 +73,46 @@ module.exports = function (plop, cfg) {
    * @param  {object}   vars  User input on prompts passed by plop
    * @return {json}   modified JSON
    */
-  function appendJSON(json, vars) {
+    // function appendJSON(json, vars) {
+    function appendJSON(json, vars, config, plop) {
+        // JSON attribute to modify, allows templates
+        let property_name = config.hasOwnProperty("JSONEntryKey") ?
+            plop.renderString(config.JSONEntryKey, vars) : null;
 
-      let attribute_name = config.hasOwnProperty("JSONEntryKey") ?
-              replaceStr(config.JSONEntryKey, vars) : null;
+        debug(`Targets \nFile: ${config.JSONFile}\nForce:${config.force} (Replaces existing)\nTarget property: ${config.JSONKey}\nType:${property_name ? 'Object:' + property_name : 'Array'}`);
 
-      // Validate JSON is correct - we don't autoadd only append top level
-      if (!json.hasOwnProperty(config.JSONKey)) {
-          return cb('JSON has no property: ' + config.JSONKey);
-      }
 
-      if (!config.force && attribute_name && json[config.JSONKey].hasOwnProperty(attribute_name)) {
-          return cb("Attribute: " + attribute_name + ' already exist in ' + config.JSONKey)
-      }
-      // the value with replacements
-      let insert_val = replace(config.JSONEntryValue, vars);
-      // Choosing object (key:value) OR push(value)
-      if (attribute_name) {
-          json[config.JSONKey][attribute_name] = insert_val;
-      } else {
-          json[config.JSONKey].push( insert_val);
-      }
-			return json;
-  }
-  function replaceObj(value, vars) {
-      let obj = value;
-      Object.keys(obj).forEach(function(item) {
-          obj[item] = replaceStr(obj[item], vars);
-      });
-      return obj;
-  }
+        // If key exists use otherwise force OR error
+        if (!json.hasOwnProperty(config.JSONKey)) {
+            if (!config.force) {
+                throw 'JSON has no property: ' + config.JSONKey;
+            } else {
+                const emptyCollection = property_name ? {} : [];
+                json[config.JSONKey] = emptyCollection;
+            }
+        }
 
-  // Not optimized, if multiple can create an object with name:regex({{name}})
-  function replaceStr(value, vars) {
-      let val = value;
-      Object.keys(vars).forEach(function(var_key) {
-          let find = new RegExp( '{{' + var_key + '}}' , "g");
-          val = val.replace(find, vars[var_key]);
-      });
-      return val;
-  }
-  function replace(value, vars) {
-      return (typeof value === "object") ? replaceObj(value, vars) : replaceStr(value, vars);
-  }
+        // If object and prop exists then force or error
+        if (!config.force && property_name && json[config.JSONKey].hasOwnProperty(property_name)) {
+            throw "Attribute: " + property_name + ' already exist in ' + config.JSONKey
+        }
+        // Process the Value - change this for handlebars
+        let insert_val = replace(config.JSONEntryValue, vars, plop);
+        debug(`Adding: `, insert_val);
+
+        // Choosing object (key:value) OR push(value)
+        if (property_name) {
+            json[config.JSONKey][property_name] = insert_val;
+        } else {
+            if (Array.isArray(json[config.JSONKey])) {
+                json[config.JSONKey].push(insert_val);
+            } else {
+                throw `Array expected, did you forget to add a JSONEntryKey?`
+            }
+        }
+        return json;
+        //   return json;
+    }
+
+
 }

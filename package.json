@@ -6,7 +6,11 @@
   "scripts": {
     "test": "node testhelpers.js"
   },
-  "keywords": ["plop", "generator", "JSON"],
+  "keywords": [
+    "plop",
+    "generator",
+    "JSON"
+  ],
   "homepage": "https://github.com/mritzco/plop-pack-json-modify",
   "repository": {
     "type": "git",
@@ -16,6 +20,10 @@
   "license": "ISC",
   "dependencies": {
     "colors": "^1.3.0",
-    "fs-extra": "^6.0.1"
+    "debug": "^4.3.4",
+    "json3": "^3.3.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.14.0"
   }
 }

@@ -1,6 +1,6 @@
 # plop-pack-json-modify
 
-Modify JSON files with a custom plop action type.
+Modify JSON files with a custom plop action type. Can add object key-values or push to arrays.
 
 ## Installation
 ```
@@ -8,86 +8,134 @@ npm install --save plop-pack-json-modify
 ```
 
 #### Generators included
-- **appendJSON**. Modifies a JSON
-- **appendJSONFile**. Opens, modifies and store a JSON file
+- **json-modify-file**. Modifiers JSON file
 
 
 ## Usage
-In your base plopfile, use plop.load
+- Load
+- Configure actions
+
 ```
-const aGenerator = require("./path/to/a/generator");
-
-module.exports = function(plop) {
-    plop.load("plop-pack-json-modify");
-
-    plop.setGenerator("Generator Name", aGenerator);
-};
+// popfile.js
+module.exports = (plop) => {
+  # Load the action
+  plop.load('plop-pack-json-modify')
+  ...
+  # Use in actions
+  {
+        type: 'json-modify-file', // Point to this action
+        force: true,              // Overrides, create non existing
+        JSONFile: './destination.json', // File to modify
+        JSONKey: "routesObj",  // Property to append to
+        JSONEntryKey: '{{pascalCase name}}', // Property to add
+        JSONEntryValue: { // value to add
+          mountpath: '/{{name}}',
+          module: '{{name}}/{{name}}_router'
+        }
+      }
+  }
 ```
 
 
-
-### How to use
+### Properties
 
 Valid configuration options:
 
-```.js
-// plopfile.js
-{
-    type: 'appendJSONFile',       /* appendJSON || appendJSONFile */
-    JSONFile: "filename.json",    /* For appendJSONFile  */
-    JSONKey: "routes",            /* JSON key to modify: routes: {} || [] */
-    JSONEntryKey: "{{name}}_key"  /* For objects, key to insert */
-    JSONEntryValue: {             /* Any valid JSON content */
-        "mountpath": "/{{name}}",
-        "module": "{{name}}/{{name}}_router"
-    }
-}
-```
+- **force**.
+    - False: Will respect existing data and structures.
+    - True: Will override existing keys, will create target collection if missing.
+- **JSONFile**. File to modify
+- **JSONKey**. Property in the JSON to modify.
+- **JSONEntryKey**. When adding `Objects` the property to create. For arrays **don't use.**
+- **JSONEntryValue**. Value to add to array or to JSONEntryKey.
+
 
 #### Example:
+Modify this file:
 ```js
-// filename.json  
+// destination.json  - You can start with {} if using force=true
 {
-    routes: {},
-    modules: []
-
+    routesObj: {},
+    modulesArray: []
 }
 ```
 
-Plop variables:
+With this input:
+```
+  {  name: page }
+```
 
-    name=page
-
-
+Will result in:
 ```js
 //result.js
 {
-    routes: {
-        page_key : {
-            "mountpath": "/page",
-            "module": "page/page_router"
-        }
-    },
-    modules: []
-
+  "routesObj": {
+    "Page": {
+      "mountpath": "/page",
+      "module": "page/page_router"
+    }
+  },
+  "modulesArray": [
+    {
+      "mountpath": "/page",
+      "module": "page/page_router"
+    }
+  ]
 }
 
 ```
 
-For inserting into 'modules' array instead:
+Using this plop file:
 ```js
 // plopfile.js
-{
-    type: 'appendJSONFile',
-    JSONFile: "filename.json",
-    JSONKey: "modules",      
-    JSONEntryValue: {
-        "mountpath": "/{{name}}",
-        "module": "{{name}}/{{name}}_router"
-    }
+module.exports = (plop) => {
+  // plop.setDefaultInclude({ actionTypes: true });
+  //
+  plop.load('plop-pack-json-modify')
+  plop.setGenerator('service', {
+    description: 'Create a new something.',
+    prompts: [
+      {
+        type: 'input',
+        name: 'name',
+        message: "What's the service name?"
+      }
+    ],
+    actions: () => {
+      return [
+       {
+
+        type: 'json-modify-file',
+        force: true,
+        JSONFile: './destination.json',
+        JSONKey: "routesObj",  
+        JSONEntryKey: '{{pascalCase name}}',
+        JSONEntryValue: {
+          mountpath: '/{{name}}',
+          module: '{{name}}/{{name}}_router'
+        }
+      },
+       {
+         // Arrays
+        type: 'json-modify-file',
+        force: true,
+        JSONFile: './destination.json',
+        JSONKey: "modulesArray",  
+        JSONEntryValue: {
+          mountpath: '/{{name}}',
+          module: '{{name}}/{{name}}_router'
+        }
+      }
+    ]
+  }
+  })
 }
+
 ```
 
+### Debugging
+`Debug` package added run with:
+`DEBUG=json-modify-file plop`
 
 #### Plop repo and instruction:
   https://github.com/amwmedia/plop

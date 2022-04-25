@@ -1,0 +1,18 @@
+{
+  "name": "plop-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "plopfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "DEBUG=json-modify-file plop"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^8.14.0"
+  },
+  "dependencies": {
+    "plop": "^3.0.5"
+  }
+}

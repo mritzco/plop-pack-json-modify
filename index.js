@@ -97,7 +97,8 @@ module.exports = function (plop, cfg) {
             throw "Attribute: " + property_name + ' already exist in ' + config.JSONKey
         }
         // Process the Value - change this for handlebars
-        let insert_val = replace(config.JSONEntryValue, vars, plop);
+        let stringified_insert_val = replace(json3.stringify(config.JSONEntryValue), vars, plop);
+        let insert_val = json3.parse(stringified_insert_val);
         debug(`Adding: `, insert_val);
 
         // Choosing object (key:value) OR push(value)
